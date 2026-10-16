@@ -14,10 +14,10 @@
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
         button { width: 100%; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         button:hover { background: #1557b0; }
-        button:disabled { background: #9bbd34; cursor: not-allowed; }
+        button:disabled { background: #34a853; cursor: not-allowed; }
         .option-btn { background: #f8f9fa; color: #333; border: 1px solid #dadce0; margin-bottom: 10px; text-align: left; font-weight: normal; }
         .option-btn:hover { background: #e8f0fe; border-color: #1a73e8; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
         .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: white; background: #34a853; margin-bottom: 10px; }
         .result-box { background: #e8f0fe; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
     </style>
@@ -46,7 +46,7 @@
                 <option value="11">11-сынып</option>
             </select>
         </div>
-        <button onclick="startTest()">Тестті бастау</button>
+        <button id="start-btn">Тестті бастау</button>
     </div>
 
     <!-- 2-ҚАДАМ: Тест сұрақтары -->
@@ -69,47 +69,49 @@
             <p><strong>Анықталған білім деңгейі:</strong> <span id="res-level"></span></p>
         </div>
         <p style="font-size: 14px; color: #555;">Нәтиже Мұғалімнің Google Кестесіне сақталады.</p>
-        <button id="send-btn" onclick="sendResultToTeacher(event)">Нәтижені Google Кестеге жіберу</button>
+        <button id="send-btn">Нәтижені Google Кестеге жіберу</button>
     </div>
 </div>
 
 <script>
-    // Мұғалімнің Google Apps Script Web App сілтемесі
     const scriptURL = "https://script.google.com/macros/s/AKfycbxev2tylK8BvNt85c6gBrO8IqRAfuSkZeMuDsPy05fnn8l3-nkhS1jC5JvYF_RcW_tq/exec";
 
-    // Информатика пәні бойынша сұрақтар банкі (Адаптивті деңгейлермен)
     const questionsPool = {
-        1: [ // Жеңіл деңгей
+        1: [
             { q: "Компьютердің негізгі енгізу құрылғысын тап:", options: ["Пернетақта", "Монитор", "Принтер", "Процессор"], correct: 0 },
             { q: "Ақпараттың ең кіші өлшем бірлігі қандай?", options: ["Байт", "Бит", "Килобайт", "Мегабайт"], correct: 1 }
         ],
-        2: [ // Орташа деңгей
+        2: [
             { q: "Python тілінде экранға мәлімет шығару функциясы қандай?", options: ["input()", "read()", "print()", "write()"], correct: 2 },
             { q: "Компьютердің 'миы' деп нені атайды?", options: ["Жедел жад (ОЗУ)", "Қатқыл диск (HDD)", "Процессор (CPU)", "Аналық плата"], correct: 2 }
         ],
-        3: [ // Қиын деңгей
+        3: [
             { q: "Python тілінде `a = [1, 2, 3]` деректер типі қандай?", options: ["Tuple (Кортеж)", "List (Тізім)", "Dictionary (Сөздік)", "Set (Жиын)"], correct: 1 },
             { q: "IPv4 мекенжайы қанша биттен тұрады?", options: ["16 бит", "32 бит", "64 бит", "128 бит"], correct: 1 }
         ]
     };
 
     let currentStudent = { name: "", grade: "" };
-    let currentDifficulty = 2; // Орташа деңгейден бастаймыз
+    let currentDifficulty = 2;
     let currentQuestionIndex = 0;
     let totalQuestions = 5;
     let score = 0;
 
-    function startTest() {
-        const name = document.getElementById('student-name').value.trim();
-        const grade = document.getElementById('student-grade').value;
+    // Батырма оқиғаларын тыңдау
+    document.getElementById('start-btn').addEventListener('click', startTest);
+    document.getElementById('send-btn').addEventListener('click', sendResultToTeacher);
 
-        if (!name || !grade) {
+    function startTest() {
+        const nameInput = document.getElementById('student-name').value.trim();
+        const gradeInput = document.getElementById('student-grade').value;
+
+        if (nameInput === "" || gradeInput === "") {
             alert("Өтініш, аты-жөніңіз бен сыныбыңызды енгізіңіз!");
             return;
         }
 
-        currentStudent.name = name;
-        currentStudent.grade = grade;
+        currentStudent.name = nameInput;
+        currentStudent.grade = gradeInput;
 
         document.getElementById('login-step').classList.add('hidden');
         document.getElementById('test-step').classList.remove('hidden');
@@ -125,7 +127,86 @@
 
         document.getElementById('question-number').innerText = `Сұрақ: ${currentQuestionIndex + 1}/${totalQuestions}`;
         
-        // Деңгей индикаторын жаңарту
         const badge = document.getElementById('difficulty-badge');
         if (currentDifficulty === 1) { badge.innerText = "Деңгей: Жеңіл"; badge.style.background = "#ffbb33"; }
-        else if (currentDifficulty === 2) { badge.innerText = "Деңгей: Орташа"; badge.style.background =
+        else if (currentDifficulty === 2) { badge.innerText = "Деңгей: Орташа"; badge.style.background = "#33b5e5"; }
+        else { badge.innerText = "Деңгей: Қиын"; badge.style.background = "#ff4444"; }
+
+        const pool = questionsPool[currentDifficulty];
+        const randomQ = pool[Math.floor(Math.random() * pool.length)];
+
+        document.getElementById('question-text').innerText = randomQ.q;
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = '';
+
+        randomQ.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = function() { answerQuestion(index, randomQ.correct); };
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function answerQuestion(selected, correct) {
+        if (selected === correct) {
+            score++;
+            if (currentDifficulty < 3) currentDifficulty++;
+        } else {
+            if (currentDifficulty > 1) currentDifficulty--;
+        }
+
+        currentQuestionIndex++;
+        loadQuestion();
+    }
+
+    function showResults() {
+        document.getElementById('test-step').classList.add('hidden');
+        document.getElementById('result-step').classList.remove('hidden');
+
+        document.getElementById('res-name').innerText = currentStudent.name;
+        document.getElementById('res-grade').innerText = currentStudent.grade + "-сынып";
+        document.getElementById('res-score').innerText = score;
+
+        let finalLevel = "Орташа";
+        if (score >= 4 && currentDifficulty === 3) finalLevel = "Жоғары (Үздік)";
+        else if (score <= 2) finalLevel = "Төмен (Қосымша дайындық қажет)";
+
+        document.getElementById('res-level').innerText = finalLevel;
+    }
+
+    function sendResultToTeacher() {
+        const btn = document.getElementById('send-btn');
+        btn.innerText = "Жіберілуде...";
+        btn.disabled = true;
+
+        const finalLevel = document.getElementById('res-level').innerText;
+
+        const dataToSend = {
+            name: currentStudent.name,
+            grade: currentStudent.grade + "-сынып",
+            score: score + "/5",
+            level: finalLevel
+        };
+
+        fetch(scriptURL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dataToSend)
+        })
+        .then(() => {
+            alert("Нәтижеңіз Google Кестеге сәтті сақталды!");
+            btn.innerText = "Деректер сақталды ✓";
+        })
+        .catch(error => {
+            console.error('Қате:', error);
+            alert("Деректерді жіберу кезінде қате шықты.");
+            btn.disabled = false;
+            btn.innerText = "Қайтадан жіберу";
+        });
+    }
+</script>
+
+</body>
+</html>
