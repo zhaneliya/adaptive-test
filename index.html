@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Информатика: Адаптивті Тест</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
+        h2 { color: #1a73e8; margin-top: 0; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+        button { width: 100%; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #1557b0; }
+        button:disabled { background: #9bbd34; cursor: not-allowed; }
+        .option-btn { background: #f8f9fa; color: #333; border: 1px solid #dadce0; margin-bottom: 10px; text-align: left; font-weight: normal; }
+        .option-btn:hover { background: #e8f0fe; border-color: #1a73e8; }
+        .hidden { display: none; }
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: white; background: #34a853; margin-bottom: 10px; }
+        .result-box { background: #e8f0fe; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <!-- 1-ҚАДАМ: Оқушыны тіркеу -->
+    <div id="login-step">
+        <h2>Информатика: Адаптивті тест</h2>
+        <p style="text-align: center; color: #666;">Тестілеуді бастау үшін мәліметті енгізіңіз</p>
+        <div class="form-group">
+            <label for="student-name">Оқушының аты-жөні:</label>
+            <input type="text" id="student-name" placeholder="Мысалы: Ахметов Алихан">
+        </div>
+        <div class="form-group">
+            <label for="student-grade">Сыныбы:</label>
+            <select id="student-grade">
+                <option value="">Сыныпты таңдаңыз</option>
+                <option value="5">5-сынып</option>
+                <option value="6">6-сынып</option>
+                <option value="7">7-сынып</option>
+                <option value="8">8-сынып</option>
+                <option value="9">9-сынып</option>
+                <option value="10">10-сынып</option>
+                <option value="11">11-сынып</option>
+            </select>
+        </div>
+        <button onclick="startTest()">Тестті бастау</button>
+    </div>
+
+    <!-- 2-ҚАДАМ: Тест сұрақтары -->
+    <div id="test-step" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span id="question-number" style="color: #666; font-size: 14px;">Сұрақ: 1/5</span>
+            <span id="difficulty-badge" class="badge">Деңгей: Орташа</span>
+        </div>
+        <h3 id="question-text" style="margin-top: 10px;">Сұрақ мәтіні...</h3>
+        <div id="options-container"></div>
+    </div>
+
+    <!-- 3-ҚАДАМ: Нәтиже -->
+    <div id="result-step" class="hidden">
+        <h2>Тест нәтижесі</h2>
+        <div class="result-box">
+            <p><strong>Оқушы:</strong> <span id="res-name"></span></p>
+            <p><strong>Сынып:</strong> <span id="res-grade"></span></p>
+            <p><strong>Жинаған ұпайы:</strong> <span id="res-score"></span> / 5</p>
+            <p><strong>Анықталған білім деңгейі:</strong> <span id="res-level"></span></p>
+        </div>
+        <p style="font-size: 14px; color: #555;">Нәтиже Мұғалімнің Google Кестесіне сақталады.</p>
+        <button id="send-btn" onclick="sendResultToTeacher(event)">Нәтижені Google Кестеге жіберу</button>
+    </div>
+</div>
+
+<script>
+    // Мұғалімнің Google Apps Script Web App сілтемесі
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxev2tylK8BvNt85c6gBrO8IqRAfuSkZeMuDsPy05fnn8l3-nkhS1jC5JvYF_RcW_tq/exec";
+
+    // Информатика пәні бойынша сұрақтар банкі (Адаптивті деңгейлермен)
+    const questionsPool = {
+        1: [ // Жеңіл деңгей
+            { q: "Компьютердің негізгі енгізу құрылғысын тап:", options: ["Пернетақта", "Монитор", "Принтер", "Процессор"], correct: 0 },
+            { q: "Ақпараттың ең кіші өлшем бірлігі қандай?", options: ["Байт", "Бит", "Килобайт", "Мегабайт"], correct: 1 }
+        ],
+        2: [ // Орташа деңгей
+            { q: "Python тілінде экранға мәлімет шығару функциясы қандай?", options: ["input()", "read()", "print()", "write()"], correct: 2 },
+            { q: "Компьютердің 'миы' деп нені атайды?", options: ["Жедел жад (ОЗУ)", "Қатқыл диск (HDD)", "Процессор (CPU)", "Аналық плата"], correct: 2 }
+        ],
+        3: [ // Қиын деңгей
+            { q: "Python тілінде `a = [1, 2, 3]` деректер типі қандай?", options: ["Tuple (Кортеж)", "List (Тізім)", "Dictionary (Сөздік)", "Set (Жиын)"], correct: 1 },
+            { q: "IPv4 мекенжайы қанша биттен тұрады?", options: ["16 бит", "32 бит", "64 бит", "128 бит"], correct: 1 }
+        ]
+    };
+
+    let currentStudent = { name: "", grade: "" };
+    let currentDifficulty = 2; // Орташа деңгейден бастаймыз
+    let currentQuestionIndex = 0;
+    let totalQuestions = 5;
+    let score = 0;
+
+    function startTest() {
+        const name = document.getElementById('student-name').value.trim();
+        const grade = document.getElementById('student-grade').value;
+
+        if (!name || !grade) {
+            alert("Өтініш, аты-жөніңіз бен сыныбыңызды енгізіңіз!");
+            return;
+        }
+
+        currentStudent.name = name;
+        currentStudent.grade = grade;
+
+        document.getElementById('login-step').classList.add('hidden');
+        document.getElementById('test-step').classList.remove('hidden');
+
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentQuestionIndex >= totalQuestions) {
+            showResults();
+            return;
+        }
+
+        document.getElementById('question-number').innerText = `Сұрақ: ${currentQuestionIndex + 1}/${totalQuestions}`;
+        
+        // Деңгей индикаторын жаңарту
+        const badge = document.getElementById('difficulty-badge');
+        if (currentDifficulty === 1) { badge.innerText = "Деңгей: Жеңіл"; badge.style.background = "#ffbb33"; }
+        else if (currentDifficulty === 2) { badge.innerText = "Деңгей: Орташа"; badge.style.background =
